@@ -2,6 +2,7 @@
 #include "stdio.h"
 #include "stdint.h"
 #include "string.h"
+#include <errno.h>
 #include <stdint.h>
 #include <sys/types.h>
 #include <stdlib.h>
@@ -9,12 +10,6 @@
 //------------------------------------------------------------------------------------
 // Program main entry point
 //------------------------------------------------------------------------------------
-
-typedef struct{
-	Color color;
-	int posX;
-	int posY;
-}Pixel;
 
 bool isFileBMP(FILE* image);
 uint32_t getImageWidth(FILE* image);
@@ -30,6 +25,10 @@ int main(int argc,char * argv[])
 	//--------------------------------------------------------------------------------------
 	char* fileName = argv[1];
 	FILE *image = fopen(fileName,"r");
+	if(!image){
+		perror("Erreur lors de l'ouverture du fichier");
+	}
+
 	bool isBMP = isFileBMP(image);
 	int screenWidth;
 	int screenHeight;
@@ -66,6 +65,8 @@ int main(int argc,char * argv[])
 			break;
 	}
 	Texture2D texture = LoadTextureFromImage(img);
+	unsigned char* val = (unsigned char*)&img.data[pixelCount - 1];
+	printf("VAL = %d",*val);
 
 	InitWindow(screenWidth, screenHeight, "BMP viewer");
 
@@ -106,6 +107,9 @@ bool isFileBMP(FILE* image){
 	char buffer[2];
 
 	fread(buffer,2,1,image);
+	if(ferror(image)){
+		perror("Erreur lors de la lecture de la signature");
+	}
 	memcpy(&extractedSgntr,buffer,2);
 	
 	if(sgntr == extractedSgntr){
@@ -122,6 +126,9 @@ uint32_t getImageWidth(FILE* image){
 
 	fseek(image,18,SEEK_SET);
 	fread(buffer, 4, 1 ,image);
+	if(ferror(image)){
+		perror("Erreur lors de la lecture de la largeur");
+	}
 	memcpy(&width,buffer,sizeof(buffer));
 
 	printf("Largeur de l'image %d\n",width);
@@ -135,6 +142,9 @@ uint32_t getImageHeight(FILE* image){
 
 	fseek(image,22,SEEK_SET);
 	fread(buffer, 4, 1 ,image);
+	if(ferror(image)){
+		perror("Erreur lors de la lecture de la hauteur de l'image");
+	}
 	memcpy(&height,buffer,sizeof(buffer));
 
 	printf("Hauteur de l'image %d\n",height);
@@ -147,6 +157,10 @@ uint16_t getColorBitCount(FILE *image){
 
 	fseek(image,28,SEEK_SET);
 	fread(bufferBitCount,2,1,image);
+	if(ferror(image)){
+		perror("Erreur lors de la lecture du BitCount");
+	}
+
 	memcpy(&bitCount,bufferBitCount,2);
 	printf("Color bit count = %d\n",bitCount);
 
@@ -159,6 +173,10 @@ uint32_t getColorUsed(FILE *image){
 
 	fseek(image,46,SEEK_SET);
 	fread(bufferColorUsed,4,1,image);
+	if(ferror(image)){
+		perror("Erreur lors de la lecture de ColorUsed");
+	};
+
 	memcpy(&colorUsed,bufferColorUsed,4);
 	printf("Number of color used = %d\n",colorUsed);
 
@@ -171,6 +189,11 @@ uint32_t getDataOffset(FILE* image){
 
 	fseek(image,10,SEEK_SET);
 	fread(bufferDataOffset,4,1,image);
+
+	if(ferror(image)){
+		perror("Erreur lors de la lecture de DataOffset");
+	}
+
 	memcpy(&dataOffset,bufferDataOffset,4);
 
 	return dataOffset;
@@ -187,7 +210,10 @@ Image getImage24bit(FILE *image, uint32_t dataOffset, int pixelCount, int imageW
 	img.mipmaps = 1;
 
 	fseek(image,dataOffset,SEEK_SET);
-	fread(img.data,dataLength,1,image);
+	if(fread(img.data,sizeof(char),dataLength,image)< dataLength || ferror(image)){
+		if(feof(image))printf("Fin du fichier atteint\n");
+		perror("Erreur lors de la lecture des données des pixels");
+	}
 
 	return img;
 }
