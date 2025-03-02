@@ -2,19 +2,32 @@
 #include "stdio.h"
 #include "stdint.h"
 #include "string.h"
+#include <stdint.h>
+#include <sys/types.h>
+#include <stdlib.h>
 
 //------------------------------------------------------------------------------------
 // Program main entry point
 //------------------------------------------------------------------------------------
+
+typedef struct{
+	Color color;
+	int posX;
+	int posY;
+}Pixel;
+
 bool isFileBMP(FILE* image);
 uint32_t getImageWidth(FILE* image);
 uint32_t getImageHeight(FILE* image);
+uint16_t getColorBitCount(FILE *image);
+uint32_t getColorUsed(FILE *image);
+uint32_t getDataOffset(FILE* image);
+Image getImage24bit(FILE *image, uint32_t dataOffset, int pixelCount, int imageWidth, int imageHeight);
 
 int main(int argc,char * argv[])
 {
 	// Initialization
 	//--------------------------------------------------------------------------------------
-	
 	char* fileName = argv[1];
 	FILE *image = fopen(fileName,"r");
 	bool isBMP = isFileBMP(image);
@@ -29,7 +42,32 @@ int main(int argc,char * argv[])
 		screenHeight = 500;
 	}
 
-	InitWindow(screenWidth, screenHeight, "raylib [core] example - basic window");
+	int pixelCount = screenWidth * screenHeight;
+	uint16_t colourBitCount = getColorBitCount(image);
+	uint32_t colorUsed = getColorUsed(image);
+	uint32_t dataOffset = getDataOffset(image);
+	Image img;
+
+	switch(colourBitCount){
+		case 1:
+			break;
+		case 4:
+			break;
+		case 8:
+			break;
+		case 16:
+			break;
+		case 24:
+			img = getImage24bit(image,dataOffset,pixelCount,screenWidth, screenHeight);
+			break;
+		case 32:
+			break;
+		default:
+			break;
+	}
+	Texture2D texture = LoadTextureFromImage(img);
+
+	InitWindow(screenWidth, screenHeight, "BMP viewer");
 
 	SetTargetFPS(60);               // Set our game to run at 60 frames-per-second
 	//--------------------------------------------------------------------------------------
@@ -46,12 +84,8 @@ int main(int argc,char * argv[])
 	//----------------------------------------------------------------------------------
 	BeginDrawing();
 
-		ClearBackground(RAYWHITE);
-		if(isBMP){
-			DrawText("The file is BMP", 190, 200, 20, LIGHTGRAY);
-		}else{
-			DrawText("The file is not BMP", 190, 200, 20, LIGHTGRAY);
-		}
+		// ClearBackground(RAYWHITE);
+		// DrawTexture(texture,screenWidth/2,screenHeight/2,WHITE); 
 
 	EndDrawing();
 	//----------------------------------------------------------------------------------
@@ -105,4 +139,55 @@ uint32_t getImageHeight(FILE* image){
 
 	printf("Hauteur de l'image %d\n",height);
 	return height;
+}
+
+uint16_t getColorBitCount(FILE *image){
+	uint16_t bitCount;
+	char bufferBitCount[2];
+
+	fseek(image,28,SEEK_SET);
+	fread(bufferBitCount,2,1,image);
+	memcpy(&bitCount,bufferBitCount,2);
+	printf("Color bit count = %d\n",bitCount);
+
+	return bitCount;
+}
+
+uint32_t getColorUsed(FILE *image){
+	uint32_t colorUsed;
+	char bufferColorUsed[4];
+
+	fseek(image,46,SEEK_SET);
+	fread(bufferColorUsed,4,1,image);
+	memcpy(&colorUsed,bufferColorUsed,4);
+	printf("Number of color used = %d\n",colorUsed);
+
+	return colorUsed;
+}
+
+uint32_t getDataOffset(FILE* image){
+	uint32_t dataOffset;
+	char bufferDataOffset[4];
+
+	fseek(image,10,SEEK_SET);
+	fread(bufferDataOffset,4,1,image);
+	memcpy(&dataOffset,bufferDataOffset,4);
+
+	return dataOffset;
+}
+
+Image getImage24bit(FILE *image, uint32_t dataOffset, int pixelCount, int imageWidth, int imageHeight){
+	int dataLength = pixelCount*3;
+
+	Image img;
+	img.format = PIXELFORMAT_UNCOMPRESSED_R8G8B8;
+	img.data = (unsigned char*)malloc(dataLength);
+	img.width = imageWidth;
+	img.height = imageHeight;
+	img.mipmaps = 1;
+
+	fseek(image,dataOffset,SEEK_SET);
+	fread(img.data,dataLength,1,image);
+
+	return img;
 }
