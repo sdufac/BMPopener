@@ -64,6 +64,7 @@ int main(int argc,char * argv[])
 		default:
 			break;
 	}
+
 	Texture2D texture = LoadTextureFromImage(img);
 	unsigned char* val = (unsigned char*)&img.data[pixelCount - 1];
 	printf("VAL = %d",*val);
