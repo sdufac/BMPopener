@@ -101,16 +101,57 @@ uint32_t getDataOffset(FILE* image){
 	return dataOffset;
 }
 
-unsigned char* getPixelData(FILE *image, uint32_t dataOffset, int pixelCount, int bpp){
+uint32_t getPixelDataSize(FILE* image){
+	uint32_t dataSize;
+	char buffer[4];
+
+	fseek(image,34,SEEK_SET);
+	fread(buffer,4,1,image);
+
+	if(ferror(image)){
+		perror("Erreur lors de la lecture de PixelDataSize");
+	}
+
+	memcpy(&dataSize,buffer,4);
+
+	return dataSize;
+}
+
+unsigned char* getPixelData(FILE *image, uint32_t dataOffset, int pixelCount, int bpp, int width, int height){
 	int dataLength = pixelCount*bpp;
 
+	unsigned char* buffer[dataLength];
 	unsigned char* data = (unsigned char*)malloc(dataLength);
 
 	fseek(image,dataOffset,SEEK_SET);
-	if(fread(data,sizeof(char),dataLength,image)< dataLength || ferror(image)){
+	if(fread(buffer,sizeof(char),dataLength,image)< dataLength || ferror(image)){
 		if(feof(image))printf("Fin du fichier atteint\n");
 		perror("Erreur lors de la lecture des données des pixels");
 	}
 
+	for(int i = 0; i<height; i++){
+		memcpy(data + i * (width * 3), buffer + (dataLength - (width * 3)) - (i * (width *3)), width * 3);
+	}
+	
+	// for(int i = 0; i < height; i++){
+	// 	memcpy(data + i * (width * 3), buffer, width * 3);
+	// }
+
 	return data;
+}
+
+uint32_t getCompression(FILE *image){
+	uint32_t compression;
+	unsigned char* buffer[4];
+
+	fseek(image,30,SEEK_SET);
+	if(fread(buffer,4,1,image) !=1 || ferror(image)){
+		if(feof(image))printf("Fin du fichier atteint\n");
+		perror("Erreur lors de la lecture de la compression");
+	}
+	memcpy(&compression,buffer,4);
+
+	printf("Compression = %d\n",compression);
+
+	return compression;
 }
