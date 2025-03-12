@@ -101,21 +101,16 @@ uint32_t getDataOffset(FILE* image){
 	return dataOffset;
 }
 
-Image getImage24bit(FILE *image, uint32_t dataOffset, int pixelCount, int imageWidth, int imageHeight){
-	int dataLength = pixelCount*3;
+unsigned char* getPixelData(FILE *image, uint32_t dataOffset, int pixelCount, int bpp){
+	int dataLength = pixelCount*bpp;
 
-	Image img;
-	img.format = PIXELFORMAT_UNCOMPRESSED_R8G8B8;
-	img.data = (unsigned char*)malloc(dataLength);
-	img.width = imageWidth;
-	img.height = imageHeight;
-	img.mipmaps = 1;
+	unsigned char* data = (unsigned char*)malloc(dataLength);
 
 	fseek(image,dataOffset,SEEK_SET);
-	if(fread(img.data,sizeof(char),dataLength,image)< dataLength || ferror(image)){
+	if(fread(data,sizeof(char),dataLength,image)< dataLength || ferror(image)){
 		if(feof(image))printf("Fin du fichier atteint\n");
 		perror("Erreur lors de la lecture des données des pixels");
 	}
 
-	return img;
+	return data;
 }

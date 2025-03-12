@@ -1,3 +1,4 @@
+#include <SDL3/SDL_error.h>
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_oldnames.h>
 #define SDL_MAIN_USE_CALLBACKS 1
@@ -13,6 +14,7 @@
 
 static SDL_Window *window = NULL;
 static SDL_Renderer *renderer = NULL;
+static SDL_Texture *texture = NULL;
 
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]){
 	char* fileName = argv[1];
@@ -37,7 +39,11 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]){
 	uint16_t colourBitCount = getColorBitCount(image);
 	uint32_t colorUsed = getColorUsed(image);
 	uint32_t dataOffset = getDataOffset(image);
-	Image img;
+	unsigned char *pixelData = NULL;
+	int bpp = colourBitCount / 8;
+
+	SDL_Init(SDL_INIT_VIDEO);
+	SDL_CreateWindowAndRenderer("BMPopener", screenWidth, screenHeight, 0, &window, &renderer);
 
 	switch(colourBitCount){
 		case 1:
@@ -49,16 +55,26 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]){
 		case 16:
 			break;
 		case 24:
-			img = getImage24bit(image,dataOffset,pixelCount,screenWidth, screenHeight);
+			pixelData = getPixelData(image, dataOffset, pixelCount, bpp);
 			break;
 		case 32:
 			break;
 		default:
 			break;
 	}
+
+	SDL_Surface *surface = SDL_CreateSurfaceFrom(screenWidth, screenHeight, SDL_PIXELFORMAT_RGB24, pixelData, screenWidth * 3);
+	if(!surface){
+		SDL_Log("Impossible de creer la surface: %s", SDL_GetError());
+		return SDL_APP_FAILURE;
+	}
+
+	texture = SDL_CreateTextureFromSurface(renderer, surface);
+	if(!texture){
+		SDL_Log("Impossible de creer la texture: %s", SDL_GetError());
+		return SDL_APP_FAILURE;
+	}
 	
-	SDL_Init(SDL_INIT_VIDEO);
-	SDL_CreateWindowAndRenderer("BMPopener", screenWidth, screenHeight, 0, &window, &renderer);
 
 	return SDL_APP_CONTINUE;
 }

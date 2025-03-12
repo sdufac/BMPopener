@@ -10,6 +10,6 @@ uint32_t getImageHeight(FILE* image);
 uint16_t getColorBitCount(FILE *image);
 uint32_t getColorUsed(FILE *image);
 uint32_t getDataOffset(FILE* image);
-Image getImage24bit(FILE *image, uint32_t dataOffset, int pixelCount, int imageWidth, int imageHeight);
+unsigned char* getPixelData(FILE *image, uint32_t dataOffset, int pixelCount, int bpp);
 
 #endif
