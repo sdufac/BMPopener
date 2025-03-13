@@ -67,7 +67,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]){
 			break;
 	}
 
-	SDL_Surface *surface = SDL_CreateSurfaceFrom(screenWidth, screenHeight, SDL_PIXELFORMAT_RGB24, pixelData, screenWidth * 3);
+	SDL_Surface *surface = SDL_CreateSurfaceFrom(screenWidth, screenHeight, SDL_PIXELFORMAT_BGR24, pixelData, screenWidth * 3);
 	if(!surface){
 		SDL_Log("Impossible de creer la surface: %s", SDL_GetError());
 		return SDL_APP_FAILURE;

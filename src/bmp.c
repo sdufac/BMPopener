@@ -119,8 +119,11 @@ uint32_t getPixelDataSize(FILE* image){
 
 unsigned char* getPixelData(FILE *image, uint32_t dataOffset, int pixelCount, int bpp, int width, int height){
 	int dataLength = pixelCount*bpp;
+	int bytePerLine = width * 3;
+	printf("Modulo bytePerline par 4 = %d\n",bytePerLine%4);
 
-	unsigned char* buffer[dataLength];
+	unsigned char* buffer = (unsigned char*)malloc(dataLength);
+ ;
 	unsigned char* data = (unsigned char*)malloc(dataLength);
 
 	fseek(image,dataOffset,SEEK_SET);
@@ -128,14 +131,11 @@ unsigned char* getPixelData(FILE *image, uint32_t dataOffset, int pixelCount, in
 		if(feof(image))printf("Fin du fichier atteint\n");
 		perror("Erreur lors de la lecture des données des pixels");
 	}
-
-	for(int i = 0; i<height; i++){
-		memcpy(data + i * (width * 3), buffer + (dataLength - (width * 3)) - (i * (width *3)), width * 3);
-	}
 	
-	// for(int i = 0; i < height; i++){
-	// 	memcpy(data + i * (width * 3), buffer, width * 3);
-	// }
+	for(int i = dataLength; i >= bytePerLine; i-= bytePerLine){
+		int foo = i - bytePerLine;
+		memcpy(data + (dataLength - i), buffer + foo, bytePerLine);
+	}
 
 	return data;
 }
