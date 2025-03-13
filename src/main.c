@@ -48,6 +48,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]){
 
 	SDL_Init(SDL_INIT_VIDEO);
 	SDL_CreateWindowAndRenderer("BMPopener", screenWidth, screenHeight, 0, &window, &renderer);
+	SDL_Surface *surface = NULL;
 
 	switch(colourBitCount){
 		case 1:
@@ -57,9 +58,12 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]){
 		case 8:
 			break;
 		case 16:
+			pixelData = getPixelData(image, dataOffset, pixelCount, bpp,screenWidth,screenHeight);
+			surface = SDL_CreateSurfaceFrom(screenWidth, screenHeight, SDL_PIXELFORMAT_RGB565, pixelData, screenWidth * bpp);
 			break;
 		case 24:
 			pixelData = getPixelData(image, dataOffset, pixelCount, bpp,screenWidth,screenHeight);
+			surface = SDL_CreateSurfaceFrom(screenWidth, screenHeight, SDL_PIXELFORMAT_BGR24, pixelData, screenWidth * bpp);
 			break;
 		case 32:
 			break;
@@ -67,7 +71,6 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]){
 			break;
 	}
 
-	SDL_Surface *surface = SDL_CreateSurfaceFrom(screenWidth, screenHeight, SDL_PIXELFORMAT_BGR24, pixelData, screenWidth * 3);
 	if(!surface){
 		SDL_Log("Impossible de creer la surface: %s", SDL_GetError());
 		return SDL_APP_FAILURE;

@@ -119,7 +119,8 @@ uint32_t getPixelDataSize(FILE* image){
 
 unsigned char* getPixelData(FILE *image, uint32_t dataOffset, int pixelCount, int bpp, int width, int height){
 	int dataLength = pixelCount*bpp;
-	int bytePerLine = width * 3;
+	//operation binaire pour gérer le padding: trouver le multiple de 4 le plus proche du nombre de bit par ligne
+	int bytePerLine = (width * bpp + 3) & ~3;
 	printf("Modulo bytePerline par 4 = %d\n",bytePerLine%4);
 
 	unsigned char* buffer = (unsigned char*)malloc(dataLength);
