@@ -55,10 +55,14 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]){
 		case 1:
 			break;
 		case 4:
+			pixelData = getPixelData4(image, dataOffset, pixelCount, screenWidth, screenHeight);
+			colorPixelData = getColorData(image, colorUsed, pixelData, pixelCount);
+			bpp = 3;
+			surface = SDL_CreateSurfaceFrom(screenWidth, screenHeight, SDL_PIXELFORMAT_BGR24, colorPixelData, screenWidth * bpp);
 			break;
 		case 8:
 			pixelData = getPixelData(image, dataOffset, pixelCount, bpp, screenWidth, screenHeight);
-			colorPixelData = getColorData8(image,colorUsed,pixelData,pixelCount,bpp);
+			colorPixelData = getColorData(image,colorUsed,pixelData,pixelCount);
 			bpp = 3;
 			surface = SDL_CreateSurfaceFrom(screenWidth, screenHeight, SDL_PIXELFORMAT_BGR24, colorPixelData, screenWidth * bpp);
 			break;

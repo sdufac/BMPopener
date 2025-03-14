@@ -1,4 +1,5 @@
 #include "../include/bmp.h"
+#include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
 
@@ -152,6 +153,33 @@ unsigned char* getPixelData(FILE *image, uint32_t dataOffset, int pixelCount, in
 	return data;
 }
 
+unsigned char* getPixelData4(FILE *image, uint32_t dataOffset, int pixelCount, int width, int height){
+	size_t dataLength = pixelCount / 2;
+	if(pixelCount%2 == 1)dataLength ++;
+
+	unsigned char* buffer = malloc(dataLength);
+	unsigned char* indexData = malloc(pixelCount);
+	memset(indexData,0, pixelCount);
+
+
+	if(fread(buffer,sizeof(char),dataLength,image)< dataLength || ferror(image)){
+		if(feof(image))printf("Fin du fichier atteint\n");
+		perror("Erreur lors de la lecture des données des pixels");
+	}
+
+	int foo = 0;
+	for(int i= 0; i<dataLength; i++){
+		indexData[foo++] = buffer[i] >> 4;
+		if(foo < pixelCount -1){
+			indexData[foo++] = buffer[i] & 0xF;
+		}else{
+			break;
+		}
+	}
+	
+	return indexData;
+}
+
 uint32_t getCompression(FILE *image){
 	uint32_t compression;
 	unsigned char* buffer[4];
@@ -168,7 +196,7 @@ uint32_t getCompression(FILE *image){
 	return compression;
 }
 
-unsigned char* getColorData8(FILE *image, uint32_t colorUsed, unsigned char* pixelIndex, int nbOfPixel, int bpp){
+unsigned char* getColorData(FILE *image, uint32_t colorUsed, unsigned char* pixelIndex, int nbOfPixel){
 	int sizeofTable = colorUsed * 4;
 	uint8_t* indexBuffer = (uint8_t*)malloc(nbOfPixel);
 	uint8_t* colorBuffer = (uint8_t*)malloc(colorUsed * 4);
@@ -202,5 +230,3 @@ unsigned char* getColorData8(FILE *image, uint32_t colorUsed, unsigned char* pix
 
 	return pixelData;
 }
-
-unsigned char* getPixelDataColor4(FILE *image, uint32_t colorUsed, unsigned char* pixelIndex, int nbOfPixel);
