@@ -119,20 +119,31 @@ uint32_t getPixelDataSize(FILE* image){
 
 unsigned char* getPixelData(FILE *image, uint32_t dataOffset, int pixelCount, int bpp, int width, int height){
 	int dataLength = pixelCount*bpp;
-	//operation binaire pour gérer le padding: trouver le multiple de 4 le plus proche du nombre de bit par ligne
-	int bytePerLine = (width * bpp + 3) & ~3;
-	printf("Modulo bytePerline par 4 = %d\n",bytePerLine%4);
+
+	int bytePerLine = (width * bpp);
+	int padding = 4 - ((width * bpp)%4);
+	printf("Padding = %d\n",padding);
 
 	unsigned char* buffer = (unsigned char*)malloc(dataLength);
- ;
 	unsigned char* data = (unsigned char*)malloc(dataLength);
 
 	fseek(image,dataOffset,SEEK_SET);
-	if(fread(buffer,sizeof(char),dataLength,image)< dataLength || ferror(image)){
-		if(feof(image))printf("Fin du fichier atteint\n");
-		perror("Erreur lors de la lecture des données des pixels");
+	if(padding == 4){
+		if(fread(buffer,sizeof(char),dataLength,image)< dataLength || ferror(image)){
+			if(feof(image))printf("Fin du fichier atteint\n");
+			perror("Erreur lors de la lecture des données des pixels");
+		}
+	}else{
+		for(int i = 0; i< height; i++){
+			if(fread(buffer + (i * (bytePerLine - padding)),sizeof(char),bytePerLine - padding,image)< bytePerLine - padding || ferror(image)){
+				if(feof(image))printf("Fin du fichier atteint\n");
+				perror("Erreur lors de la lecture des données des pixels");
+			}
+			fseek(image, 3,SEEK_CUR);
+		}
 	}
 	
+	//Retourner l'image horizontalement
 	for(int i = dataLength; i >= bytePerLine; i-= bytePerLine){
 		int foo = i - bytePerLine;
 		memcpy(data + (dataLength - i), buffer + foo, bytePerLine);
@@ -157,11 +168,12 @@ uint32_t getCompression(FILE *image){
 	return compression;
 }
 
-unsigned char* getPixelDataColor8(FILE *image, uint32_t colorUsed, unsigned char* pixelIndex, int nbOfPixel, int bpp){
+unsigned char* getColorData8(FILE *image, uint32_t colorUsed, unsigned char* pixelIndex, int nbOfPixel, int bpp){
 	int sizeofTable = colorUsed * 4;
 	uint8_t* indexBuffer = (uint8_t*)malloc(nbOfPixel);
 	uint8_t* colorBuffer = (uint8_t*)malloc(colorUsed * 4);
 	unsigned char* pixelData = (unsigned char*)malloc(nbOfPixel * 3);
+
 
 	memcpy(indexBuffer,pixelIndex,nbOfPixel);
 
@@ -191,6 +203,4 @@ unsigned char* getPixelDataColor8(FILE *image, uint32_t colorUsed, unsigned char
 	return pixelData;
 }
 
-unsigned char* getPixelDataColor4(FILE *image, uint32_t colorUsed, unsigned char* pixelIndex, int nbOfPixel){
-
-}
+unsigned char* getPixelDataColor4(FILE *image, uint32_t colorUsed, unsigned char* pixelIndex, int nbOfPixel);
