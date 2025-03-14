@@ -156,3 +156,34 @@ uint32_t getCompression(FILE *image){
 
 	return compression;
 }
+
+unsigned char* getPixelDataColor(FILE *image, uint32_t colorUsed, unsigned char* pixelIndex, int nbOfPixel, int bpp){
+	int sizeofTable = colorUsed * 4;
+	uint8_t* indexBuffer = (uint8_t*)malloc(nbOfPixel);
+	uint8_t* colorBuffer = (uint8_t*)malloc(colorUsed * 4);
+	unsigned char* pixelData = (unsigned char*)malloc(nbOfPixel * 3);
+
+	memcpy(indexBuffer,pixelIndex,nbOfPixel);
+
+	fseek(image, 54, SEEK_SET);
+	if(fread(colorBuffer,4,colorUsed,image) < colorUsed || ferror(image)){
+		if(feof(image))printf("Fin du fichier atteint\n");
+		perror("Erreur lors de la lecture de la color table");
+	}
+
+	for(int i = 0; i<nbOfPixel; i++){
+		int pixelColorIndex = indexBuffer[i];
+		int colorPos;
+
+		for(int j = 0; j < colorUsed; j++){
+			int colorIndex = colorBuffer[j*3];
+			if(pixelColorIndex == colorIndex){
+				colorPos = j*3;
+			}
+		}
+
+		memcpy(pixelData + i*3,colorBuffer + colorPos,3);
+	}
+
+	return pixelData;
+}

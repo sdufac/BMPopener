@@ -44,6 +44,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]){
 	uint32_t dataSize = getPixelDataSize(image);
 	printf("Taille de raster data = %d\n",dataSize);
 	unsigned char *pixelData = NULL;
+	unsigned char* colorPixelData = NULL;
 	int bpp = colourBitCount / 8;
 
 	SDL_Init(SDL_INIT_VIDEO);
@@ -56,6 +57,10 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]){
 		case 4:
 			break;
 		case 8:
+			pixelData = getPixelData(image, dataOffset, pixelCount, bpp, screenWidth, screenHeight);
+			colorPixelData = getPixelDataColor(image,colorUsed,pixelData,pixelCount,bpp);
+			bpp = 3;
+			surface = SDL_CreateSurfaceFrom(screenWidth, screenHeight, SDL_PIXELFORMAT_BGR24, colorPixelData, screenWidth * bpp);
 			break;
 		case 16:
 			pixelData = getPixelData(image, dataOffset, pixelCount, bpp,screenWidth,screenHeight);
@@ -66,6 +71,8 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]){
 			surface = SDL_CreateSurfaceFrom(screenWidth, screenHeight, SDL_PIXELFORMAT_BGR24, pixelData, screenWidth * bpp);
 			break;
 		case 32:
+			pixelData = getPixelData(image, dataOffset, pixelCount, bpp,screenWidth,screenHeight);
+			surface = SDL_CreateSurfaceFrom(screenWidth, screenHeight, SDL_PIXELFORMAT_ARGB8888, pixelData, screenWidth * bpp);
 			break;
 		default:
 			break;
