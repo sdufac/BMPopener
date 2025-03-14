@@ -157,7 +157,7 @@ uint32_t getCompression(FILE *image){
 	return compression;
 }
 
-unsigned char* getPixelDataColor(FILE *image, uint32_t colorUsed, unsigned char* pixelIndex, int nbOfPixel, int bpp){
+unsigned char* getPixelDataColor8(FILE *image, uint32_t colorUsed, unsigned char* pixelIndex, int nbOfPixel, int bpp){
 	int sizeofTable = colorUsed * 4;
 	uint8_t* indexBuffer = (uint8_t*)malloc(nbOfPixel);
 	uint8_t* colorBuffer = (uint8_t*)malloc(colorUsed * 4);
@@ -169,11 +169,6 @@ unsigned char* getPixelDataColor(FILE *image, uint32_t colorUsed, unsigned char*
 	if(fread(colorBuffer,4,colorUsed,image) < colorUsed || ferror(image)){
 		if(feof(image))printf("Fin du fichier atteint\n");
 		perror("Erreur lors de la lecture de la color table");
-	}
-
-	for(int i = 0; i<colorUsed; i++){
-		int index = i*4;
-		printf("Couleur %d, %d %d %d\n",i,colorBuffer[index],colorBuffer[index +1],colorBuffer[index +2]);
 	}
 
 	for(int i = 0; i<nbOfPixel; i++){
@@ -190,5 +185,12 @@ unsigned char* getPixelDataColor(FILE *image, uint32_t colorUsed, unsigned char*
 		memcpy(pixelData + i*3,colorBuffer + colorPos,3);
 	}
 
+	free(colorBuffer);
+	free(indexBuffer);
+
 	return pixelData;
+}
+
+unsigned char* getPixelDataColor4(FILE *image, uint32_t colorUsed, unsigned char* pixelIndex, int nbOfPixel){
+
 }
