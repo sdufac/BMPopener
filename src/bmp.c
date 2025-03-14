@@ -171,14 +171,19 @@ unsigned char* getPixelDataColor(FILE *image, uint32_t colorUsed, unsigned char*
 		perror("Erreur lors de la lecture de la color table");
 	}
 
+	for(int i = 0; i<colorUsed; i++){
+		int index = i*4;
+		printf("Couleur %d, %d %d %d\n",i,colorBuffer[index],colorBuffer[index +1],colorBuffer[index +2]);
+	}
+
 	for(int i = 0; i<nbOfPixel; i++){
 		int pixelColorIndex = indexBuffer[i];
 		int colorPos;
 
 		for(int j = 0; j < colorUsed; j++){
-			int colorIndex = colorBuffer[j*3];
+			int colorIndex = colorBuffer[j*4];
 			if(pixelColorIndex == colorIndex){
-				colorPos = j*3;
+				colorPos = j*4;
 			}
 		}
 
